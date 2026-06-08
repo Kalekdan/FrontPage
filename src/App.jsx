@@ -694,12 +694,10 @@ function HomePage({ feedData, serviceData, weatherState, onRefresh }) {
             </div>
           </div>
           <div className="feed-header-actions">
-            {hasLoadingFeeds ? (
-              <span className="feed-loading" role="status" aria-live="polite">
-                <span className="loading-icon" aria-hidden="true" />
-                Loading feeds
-              </span>
-            ) : null}
+            <span className={`feed-loading${hasLoadingFeeds ? ' active' : ''}`} role="status" aria-live="polite">
+              <span className="loading-icon" aria-hidden="true" />
+              <span className="sr-only">Loading feeds</span>
+            </span>
             <a className="panel-link" href="#/">
               Refresh all
             </a>

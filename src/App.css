@@ -160,21 +160,21 @@ button {
   border: 1px solid var(--line);
   border-radius: 1rem;
   display: flex;
+  flex-wrap: nowrap;
   justify-content: space-between;
   min-height: 3.2rem;
   padding: 0.55rem 0.85rem;
 }
 
 .top-tabs {
+  align-items: center;
   display: flex;
   flex-wrap: nowrap;
   gap: 0.7rem;
-  overflow-x: auto;
-  scrollbar-width: none;
 }
 
-.top-tabs::-webkit-scrollbar {
-  display: none;
+.top-actions {
+  flex-shrink: 0;
 }
 
 .top-tabs a {
@@ -457,6 +457,7 @@ button {
   display: flex;
   flex-wrap: nowrap;
   gap: 0.8rem;
+  min-height: 1.2rem;
 }
 
 .feed-picker {
@@ -546,11 +547,29 @@ button {
   display: inline-flex;
   font-size: 0.76rem;
   font-weight: 700;
-  gap: 0.42rem;
-  letter-spacing: 0.04em;
+  height: 1rem;
   line-height: 1;
+  opacity: 0;
+  visibility: hidden;
+  width: 1rem;
+}
+
+.feed-loading.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.sr-only {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
   text-transform: uppercase;
   white-space: nowrap;
+  width: 1px;
 }
 
 .loading-icon {
@@ -780,12 +799,16 @@ button {
     grid-template-columns: 1fr;
   }
 
-  .topbar,
   .service-tile,
   .panel-heading,
   .section-header,
   .headline-meta {
     flex-direction: column;
+  }
+
+  .topbar {
+    align-items: center;
+    flex-direction: row;
   }
 
   .service-state {
