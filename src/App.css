@@ -160,21 +160,21 @@ button {
   border: 1px solid var(--line);
   border-radius: 1rem;
   display: flex;
+  flex-wrap: nowrap;
   justify-content: space-between;
   min-height: 3.2rem;
   padding: 0.55rem 0.85rem;
 }
 
 .top-tabs {
+  align-items: center;
   display: flex;
   flex-wrap: nowrap;
   gap: 0.7rem;
-  overflow-x: auto;
-  scrollbar-width: none;
 }
 
-.top-tabs::-webkit-scrollbar {
-  display: none;
+.top-actions {
+  flex-shrink: 0;
 }
 
 .top-tabs a {
@@ -457,6 +457,7 @@ button {
   display: flex;
   flex-wrap: nowrap;
   gap: 0.8rem;
+  min-height: 1.2rem;
 }
 
 .feed-picker {
@@ -546,11 +547,29 @@ button {
   display: inline-flex;
   font-size: 0.76rem;
   font-weight: 700;
-  gap: 0.42rem;
-  letter-spacing: 0.04em;
+  height: 1rem;
   line-height: 1;
+  opacity: 0;
+  visibility: hidden;
+  width: 1rem;
+}
+
+.feed-loading.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.sr-only {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
   text-transform: uppercase;
   white-space: nowrap;
+  width: 1px;
 }
 
 .loading-icon {
@@ -587,8 +606,8 @@ button {
 
 .headline-grid {
   display: grid;
-  gap: 0.85rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 @keyframes spin {
@@ -604,13 +623,13 @@ button {
 
 .headline-image {
   border-bottom: 1px solid rgba(150, 174, 231, 0.18);
-  height: 126px;
+  height: 96px;
 }
 
 .headline-image-media {
   border-bottom: 1px solid rgba(150, 174, 231, 0.18);
   display: block;
-  height: 126px;
+  height: 96px;
   object-fit: cover;
   width: 100%;
 }
@@ -638,8 +657,8 @@ button {
 
 .headline-body {
   display: grid;
-  gap: 0.62rem;
-  padding: 0.8rem;
+  gap: 0.5rem;
+  padding: 0.62rem;
 }
 
 .headline-tag {
@@ -657,7 +676,7 @@ button {
 
 .headline-card h3 {
   display: -webkit-box;
-  font-size: 1.42rem;
+  font-size: 1.08rem;
   line-clamp: 2;
   line-height: 1.2;
   -webkit-box-orient: vertical;
@@ -667,10 +686,10 @@ button {
 
 .headline-card .muted {
   display: -webkit-box;
-  font-size: 0.9rem;
-  line-clamp: 3;
+  font-size: 0.82rem;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   overflow: hidden;
 }
 
@@ -780,12 +799,16 @@ button {
     grid-template-columns: 1fr;
   }
 
-  .topbar,
   .service-tile,
   .panel-heading,
   .section-header,
   .headline-meta {
     flex-direction: column;
+  }
+
+  .topbar {
+    align-items: center;
+    flex-direction: row;
   }
 
   .service-state {
