@@ -5,6 +5,7 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiExternalLink,
+  FiRefreshCw,
   FiSearch,
   FiSettings,
   FiStar,
@@ -1000,7 +1001,7 @@ function DashboardChrome({ children, routePage, onRefresh, onNewWidget, isBookma
   )
 }
 
-function HomePage({ feedData, serviceData, weatherState, onRefresh, isBookmarkSidebarOpen, onToggleBookmarkSidebar }) {
+function HomePage({ feedData, serviceData, weatherState, onRefresh, onRefreshServices, isBookmarkSidebarOpen, onToggleBookmarkSidebar }) {
   const headlines = collectHeadlines(feedData)
   const [summaryText, setSummaryText] = useState('')
   const [summaryStatus, setSummaryStatus] = useState('idle')
@@ -1106,7 +1107,12 @@ function HomePage({ feedData, serviceData, weatherState, onRefresh, isBookmarkSi
               <p className="eyebrow">Network Infrastructure</p>
               <h2>Service availability</h2>
             </div>
-            <span className="status-pill">{overallServiceState}</span>
+            <div className="service-heading-actions">
+              <button className="service-refresh-button" type="button" onClick={onRefreshServices} aria-label="Refresh network infrastructure">
+                <FiRefreshCw aria-hidden="true" />
+              </button>
+              <span className="status-pill">{overallServiceState}</span>
+            </div>
           </div>
 
           <div className="service-grid">
@@ -1341,10 +1347,11 @@ function SectionPage({ routePage, title, description, onRefresh, isBookmarkSideb
 
 function App() {
   const [refreshKey, setRefreshKey] = useState(0)
+  const [serviceRefreshKey, setServiceRefreshKey] = useState(0)
   const [isBookmarkSidebarOpen, setIsBookmarkSidebarOpen] = useState(true)
   const route = useHashRoute()
   const feedData = useFeedData(refreshKey)
-  const serviceData = useServiceStatus(refreshKey)
+  const serviceData = useServiceStatus(serviceRefreshKey)
   const weatherState = useWeather(refreshKey)
   const activeFeed = dashboardConfig.rss.feeds.find((feed) => feed.id === route.feedId)
 
@@ -1453,6 +1460,7 @@ function App() {
       serviceData={serviceData}
       weatherState={weatherState}
       onRefresh={() => setRefreshKey((value) => value + 1)}
+      onRefreshServices={() => setServiceRefreshKey((value) => value + 1)}
       isBookmarkSidebarOpen={isBookmarkSidebarOpen}
       onToggleBookmarkSidebar={() => setIsBookmarkSidebarOpen((value) => !value)}
     />
