@@ -194,7 +194,8 @@ function parseFeedXml(xmlText, itemLimit) {
   }
 
   const fallbackImage = getFeedImage(doc)
-  const itemNodes = Array.from(doc.querySelectorAll('item, entry')).slice(0, itemLimit)
+  const allItemNodes = Array.from(doc.querySelectorAll('item, entry'))
+  const itemNodes = itemLimit === 0 ? allItemNodes : allItemNodes.slice(0, itemLimit)
 
   return itemNodes.map((itemNode) => ({
     title: getFirstNodeText(itemNode, ['title']) || 'Untitled story',
