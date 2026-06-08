@@ -18,7 +18,7 @@
 
 - [ ] Implement real page content for Insights.
 - [ ] Implement real page content for Automation.
-- [ ] Implement real page content for Network.
+- [x] Implement real page content for Network.
 - [ ] Implement real page content for Security.
 - [ ] Implement widget creation form and persistence on the New Widget route.
 - [ ] Connect Log out route to real authentication sign-out flow.
@@ -26,9 +26,9 @@
 
 ### P3 - UX Decisions
 
-- [ ] Decide whether top action chips are decorative or interactive.
-- [ ] If interactive: replace chips with accessible buttons and handlers.
-- [ ] If decorative: keep as non-interactive and document intent.
+- [x] Decide whether top action chips are decorative or interactive.
+- [x] If interactive: replace chips with accessible buttons and handlers.
+- [x] If decorative: keep as non-interactive and document intent.
 
 ## Notes
 
