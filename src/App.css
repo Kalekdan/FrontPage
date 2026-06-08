@@ -1171,10 +1171,85 @@ button {
   gap: 0.8rem;
 }
 
+.detail-header-actions {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.45rem;
+}
+
+.detail-header-actions .eyebrow {
+  margin-bottom: 0;
+}
+
+.network-detail-list {
+  gap: 0.9rem;
+}
+
 .feed-card,
 .detail-card {
   display: grid;
   gap: 0.75rem;
+}
+
+.network-detail-card {
+  gap: 0.9rem;
+}
+
+.network-summary-grid {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.network-summary-grid > div {
+  background: rgba(138, 176, 255, 0.05);
+  border: 1px solid rgba(138, 176, 255, 0.1);
+  border-radius: 0.7rem;
+  display: grid;
+  gap: 0.22rem;
+  padding: 0.65rem 0.72rem;
+}
+
+.network-label {
+  color: #7285a8;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.network-summary-grid strong {
+  color: #e8f0ff;
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.network-metadata-list {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+}
+
+.network-metadata-list > div {
+  border-top: 1px solid rgba(138, 176, 255, 0.1);
+  display: grid;
+  gap: 0.16rem;
+  padding-top: 0.55rem;
+}
+
+.network-metadata-list dt {
+  color: #7285a8;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.network-metadata-list dd {
+  color: #d7e2fb;
+  line-height: 1.45;
+  margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .detail-image {
@@ -1300,7 +1375,8 @@ button.panel-link {
   .top-grid,
   .headline-grid,
   .service-grid,
-  .forecast-row {
+  .forecast-row,
+  .network-summary-grid {
     grid-template-columns: 1fr;
   }
 
