@@ -19,7 +19,7 @@ npm run dev
 ## Configuration
 Edit `src/frontpage.config.js` to change:
 - `rss.feeds`: feed ids, names, descriptions, and RSS URLs
-- `rss.proxyUrl`: RSS proxy endpoint. The default uses rss2json and supports either a prefix URL or a `{url}` placeholder.
+- `rss.corsProxyUrl`: optional CORS proxy endpoint if a feed blocks direct browser requests; supports either a prefix URL or a `{url}` placeholder
 - `services`: CORS-accessible URLs to ping from the browser
 - `weather`: label, coordinates, timezone, and unit preferences
 
