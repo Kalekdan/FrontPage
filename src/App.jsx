@@ -61,6 +61,14 @@ function getRouteFromHash() {
     return { page: 'feed', feedId: decodeURIComponent(parts[1]) }
   }
 
+   if (parts[0] === 'widgets' && parts[1] === 'new') {
+    return { page: 'widget-new' }
+  }
+
+  if (['insights', 'automation', 'network', 'security', 'support', 'logout'].includes(parts[0])) {
+    return { page: parts[0] }
+  }
+
   return { page: 'home' }
 }
 
@@ -511,51 +519,66 @@ function collectHeadlines(feedData) {
     .slice(0, 12)
 }
 
-function DashboardChrome({ children, routePage, onRefresh }) {
-  const menuItems = ['Home', 'Insights', 'Automation', 'Network', 'Security']
+function DashboardChrome({ children, routePage, onRefresh, onNewWidget }) {
+  const menuItems = [
+    { label: 'Home', page: 'home', href: '#/' },
+    { label: 'Insights', page: 'insights', href: '#/insights' },
+    { label: 'Automation', page: 'automation', href: '#/automation' },
+    { label: 'Network', page: 'network', href: '#/network' },
+    { label: 'Security', page: 'security', href: '#/security' },
+  ]
+  const topTabs = [
+    { label: 'Home', page: 'home', href: '#/' },
+    { label: 'Insights', page: 'insights', href: '#/insights' },
+    { label: 'Automation', page: 'automation', href: '#/automation' },
+  ]
 
   return (
     <div className="dashboard-shell">
       <aside className="sidebar">
         <div className="brand-block">
-          <p className="brand-title">Nexus Dashboard</p>
+          <p className="brand-title">JR's Dashboard</p>
           <p className="brand-subtitle">System Admin</p>
           <p className="brand-mode">Precision Mode</p>
         </div>
 
         <nav className="side-nav" aria-label="Primary">
           {menuItems.map((item) => {
-            const isHome = routePage === 'home' && item === 'Home'
-            const isFeed = routePage === 'feed' && item === 'Insights'
-            const active = isHome || isFeed
+            const isFeed = routePage === 'feed' && item.page === 'insights'
+            const active = routePage === item.page || isFeed
 
             return (
-              <a key={item} className={`side-nav-item${active ? ' active' : ''}`} href={item === 'Home' ? '#/' : '#/'}>
+              <a key={item.page} className={`side-nav-item${active ? ' active' : ''}`} href={item.href}>
                 <span className="dot" aria-hidden="true" />
-                {item}
+                {item.label}
               </a>
             )
           })}
         </nav>
 
-        <button className="widget-button" type="button">
+        <button className="widget-button" type="button" onClick={onNewWidget}>
           + New Widget
         </button>
 
         <div className="side-foot">
-          <a href="#/">Support</a>
-          <a href="#/">Log out</a>
+          <a href="#/support">Support</a>
+          <a href="#/logout">Log out</a>
         </div>
       </aside>
 
       <section className="main-panel">
         <header className="topbar">
           <nav className="top-tabs" aria-label="Sections">
-            <a className="active" href="#/">
-              Home
-            </a>
-            <a href="#/">Insights</a>
-            <a href="#/">Automation</a>
+            {topTabs.map((tab) => {
+              const isFeed = routePage === 'feed' && tab.page === 'insights'
+              const active = routePage === tab.page || isFeed
+
+              return (
+                <a className={active ? 'active' : ''} href={tab.href} key={tab.page}>
+                  {tab.label}
+                </a>
+              )
+            })}
           </nav>
           <div className="top-actions">
             <span className="icon-chip" aria-hidden="true">
@@ -599,7 +622,7 @@ function HomePage({ feedData, serviceData, weatherState, onRefresh }) {
     .join('\n')
 
   return (
-    <DashboardChrome routePage="home" onRefresh={onRefresh}>
+    <DashboardChrome routePage="home" onRefresh={onRefresh} onNewWidget={() => (window.location.hash = '/widgets/new')}>
       <section className="top-grid">
         <article className="panel weather-panel">
           <div className="weather-header">
@@ -699,9 +722,9 @@ function HomePage({ feedData, serviceData, weatherState, onRefresh }) {
               <span className="loading-icon" aria-hidden="true" />
               <span className="sr-only">Loading feeds</span>
             </span>
-            <a className="panel-link" href="#/">
+            <button className="panel-link" type="button" onClick={onRefresh}>
               Refresh all
-            </a>
+            </button>
           </div>
         </div>
 
@@ -772,7 +795,7 @@ function FeedCard({ feed, state }) {
 
 function FeedDetailPage({ feed, state }) {
   return (
-    <DashboardChrome routePage="feed">
+    <DashboardChrome routePage="feed" onNewWidget={() => (window.location.hash = '/widgets/new')}>
       <section className="panel detail-header">
         <a className="back-link" href="#/">
           Back to dashboard
@@ -803,6 +826,18 @@ function FeedDetailPage({ feed, state }) {
   )
 }
 
+function SectionPage({ routePage, title, description, onRefresh }) {
+  return (
+    <DashboardChrome routePage={routePage} onRefresh={onRefresh} onNewWidget={() => (window.location.hash = '/widgets/new')}>
+      <section className="panel detail-header">
+        <p className="eyebrow">{title}</p>
+        <h1>{title}</h1>
+        <p className="hero-copy">{description}</p>
+      </section>
+    </DashboardChrome>
+  )
+}
+
 function App() {
   const [refreshKey, setRefreshKey] = useState(0)
   const route = useHashRoute()
@@ -813,6 +848,80 @@ function App() {
 
   if (route.page === 'feed' && activeFeed) {
     return <FeedDetailPage feed={activeFeed} state={feedData[activeFeed.id] ?? { summary: '', items: [] }} />
+  }
+
+  if (route.page === 'insights') {
+    return (
+      <SectionPage
+        routePage="insights"
+        title="Insights"
+        description="Explore signal trends, feed summaries, and intelligence snapshots."
+        onRefresh={() => setRefreshKey((value) => value + 1)}
+      />
+    )
+  }
+
+  if (route.page === 'automation') {
+    return (
+      <SectionPage
+        routePage="automation"
+        title="Automation"
+        description="Create and manage automation routines for recurring operations."
+        onRefresh={() => setRefreshKey((value) => value + 1)}
+      />
+    )
+  }
+
+  if (route.page === 'network') {
+    return (
+      <SectionPage
+        routePage="network"
+        title="Network"
+        description="Track network health, uptime history, and endpoint diagnostics."
+        onRefresh={() => setRefreshKey((value) => value + 1)}
+      />
+    )
+  }
+
+  if (route.page === 'security') {
+    return (
+      <SectionPage
+        routePage="security"
+        title="Security"
+        description="Review alerts, patch posture, and risk indicators across systems."
+        onRefresh={() => setRefreshKey((value) => value + 1)}
+      />
+    )
+  }
+
+  if (route.page === 'support') {
+    return (
+      <SectionPage
+        routePage="home"
+        title="Support"
+        description="Support options are coming next: runbooks, contact channels, and escalation flows."
+      />
+    )
+  }
+
+  if (route.page === 'logout') {
+    return (
+      <SectionPage
+        routePage="home"
+        title="Log out"
+        description="Sign out flow is not connected yet. Wire this route to your authentication provider."
+      />
+    )
+  }
+
+  if (route.page === 'widget-new') {
+    return (
+      <SectionPage
+        routePage="automation"
+        title="New Widget"
+        description="Widget creation has been stubbed. Add a form and persistence workflow to complete it."
+      />
+    )
   }
 
   return (

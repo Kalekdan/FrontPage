@@ -149,6 +149,7 @@ button {
 
 .main-panel {
   display: grid;
+  align-content: start;
   gap: 1rem;
   padding: 1rem 1.1rem 1.2rem;
 }
@@ -162,6 +163,7 @@ button {
   display: flex;
   flex-wrap: nowrap;
   justify-content: space-between;
+  max-height: 3.2rem;
   min-height: 3.2rem;
   padding: 0.55rem 0.85rem;
 }
@@ -732,6 +734,14 @@ button {
 .back-link {
   color: var(--blue);
   text-decoration: none;
+}
+
+button.panel-link {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
 }
 
 .headline-list a:hover,
