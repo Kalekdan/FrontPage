@@ -3,14 +3,6 @@ export const dashboardConfig = {
   subtitle: 'A configurable personal homepage for feeds, service health, and weather.',
   bookmarks: [
     {
-      id: 'gmail',
-      title: 'Gmail',
-      url: 'https://mail.google.com/',
-      description: 'Secondary inbox for emails.',
-      tags: ['Communication'],
-      starred: false,
-    },
-    {
       id: 'calendar',
       title: 'Google Calendar',
       url: 'https://calendar.google.com/',
@@ -48,6 +40,14 @@ export const dashboardConfig = {
       url: 'https://www.dndbeyond.com/',
       description: 'Character sheets and campaign management.',
       tags: ['Gaming'],
+      starred: false,
+    },
+    {
+      id: 'gmail',
+      title: 'Gmail',
+      url: 'https://mail.google.com/',
+      description: 'Secondary inbox for emails.',
+      tags: ['Communication'],
       starred: false,
     },
     {

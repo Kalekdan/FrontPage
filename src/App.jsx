@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   FiBookmark,
   FiChevronDown,
@@ -596,6 +596,75 @@ function BookmarkSidebar({ isOpen, onToggle }) {
   const [searchValue, setSearchValue] = useState('')
   const [collapsedSections, setCollapsedSections] = useState({})
   const { sections, totalMatches, matchingBookmarks } = getBookmarkSections(searchValue)
+  const searchInputRef = useRef(null)
+  const topSearchResult = matchingBookmarks[0]
+
+  function openTopSearchResult() {
+    if (!topSearchResult?.url) {
+      return
+    }
+
+    window.location.assign(topSearchResult.url)
+  }
+
+  function isEditableElement(element) {
+    if (!element) {
+      return false
+    }
+
+    const tagName = element.tagName?.toLowerCase()
+
+    return element.isContentEditable || tagName === 'input' || tagName === 'textarea' || tagName === 'select'
+  }
+
+  useEffect(() => {
+    function handleGlobalBookmarkSearch(event) {
+      if (!isOpen || event.metaKey || event.ctrlKey || event.altKey) {
+        return
+      }
+
+      const target = event.target
+      const targetIsSearchInput = target === searchInputRef.current
+
+      if (targetIsSearchInput) {
+        return
+      }
+
+      if (isEditableElement(target) && !targetIsSearchInput) {
+        return
+      }
+
+      if (event.key === 'Enter') {
+        if (searchValue && topSearchResult) {
+          event.preventDefault()
+          openTopSearchResult()
+        }
+        return
+      }
+
+      if (event.key === 'Backspace') {
+        if (!searchValue) {
+          return
+        }
+
+        event.preventDefault()
+        setSearchValue((currentValue) => currentValue.slice(0, -1))
+        searchInputRef.current?.focus()
+        return
+      }
+
+      if (event.key.length !== 1) {
+        return
+      }
+
+      event.preventDefault()
+      setSearchValue((currentValue) => `${currentValue}${event.key}`)
+      searchInputRef.current?.focus()
+    }
+
+    window.addEventListener('keydown', handleGlobalBookmarkSearch)
+    return () => window.removeEventListener('keydown', handleGlobalBookmarkSearch)
+  }, [isOpen, searchValue, topSearchResult])
 
   function toggleSection(sectionId) {
     setCollapsedSections((currentValue) => ({
@@ -628,11 +697,18 @@ function BookmarkSidebar({ isOpen, onToggle }) {
             <label className="bookmark-search" htmlFor="bookmark-search">
               <FiSearch aria-hidden="true" />
               <input
+                ref={searchInputRef}
                 id="bookmark-search"
                 type="search"
                 placeholder="Search bookmarks"
                 value={searchValue}
                 onChange={(event) => setSearchValue(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && searchValue && topSearchResult) {
+                    event.preventDefault()
+                    openTopSearchResult()
+                  }
+                }}
               />
             </label>
             <p className="bookmark-count">{totalMatches} matching bookmark{totalMatches === 1 ? '' : 's'}</p>
@@ -651,7 +727,7 @@ function BookmarkSidebar({ isOpen, onToggle }) {
         {isOpen && searchValue ? (
           <div className="bookmark-list">
             {matchingBookmarks.map((bookmark) => (
-              <a className="bookmark-card" href={bookmark.url} key={bookmark.id} target="_blank" rel="noreferrer">
+              <a className="bookmark-card" href={bookmark.url} key={bookmark.id}>
                 <div className="bookmark-card-head">
                   <strong>{bookmark.title}</strong>
                   <span className="bookmark-icons">
@@ -689,7 +765,7 @@ function BookmarkSidebar({ isOpen, onToggle }) {
                   {!isCollapsed ? (
                     <div className="bookmark-list">
                       {section.items.map((bookmark) => (
-                        <a className="bookmark-card" href={bookmark.url} key={`${section.id}-${bookmark.id}`} target="_blank" rel="noreferrer">
+                        <a className="bookmark-card" href={bookmark.url} key={`${section.id}-${bookmark.id}`}>
                           <div className="bookmark-card-head">
                             <strong>{bookmark.title}</strong>
                             <span className="bookmark-icons">
