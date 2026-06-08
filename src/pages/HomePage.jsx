@@ -12,9 +12,19 @@ import {
 } from '../lib/dashboardData.js'
 import { DashboardChrome } from '../components/DashboardChrome.jsx'
 
-export function HomePage({ feedData, serviceData, weatherState, onRefresh, onRefreshServices, isBookmarkSidebarOpen, onToggleBookmarkSidebar }) {
+export function HomePage({
+  feedData,
+  serviceData,
+  weatherState,
+  summaryText,
+  summaryGeneratedAt,
+  onSummaryChange,
+  onRefresh,
+  onRefreshServices,
+  isBookmarkSidebarOpen,
+  onToggleBookmarkSidebar,
+}) {
   const headlines = collectHeadlines(feedData)
-  const [summaryText, setSummaryText] = useState('')
   const [summaryStatus, setSummaryStatus] = useState('idle')
   const [summaryError, setSummaryError] = useState('')
   const [showSummarySettings, setShowSummarySettings] = useState(false)
@@ -38,6 +48,14 @@ export function HomePage({ feedData, serviceData, weatherState, onRefresh, onRef
   const failedFeedTooltip = failedFeeds
     .map((feed) => `${feed.name}: ${feed.state.error || 'Unable to load feed.'}`)
     .join('\n')
+  const summaryGeneratedDate = summaryGeneratedAt ? new Date(summaryGeneratedAt) : null
+  const hasValidSummaryTimestamp = summaryGeneratedDate && !Number.isNaN(summaryGeneratedDate.getTime())
+  const summaryGeneratedLabel = hasValidSummaryTimestamp
+    ? new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }).format(summaryGeneratedDate)
+    : ''
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -57,7 +75,7 @@ export function HomePage({ feedData, serviceData, weatherState, onRefresh, onRef
       setSummaryStatus('loading')
       setSummaryError('')
       const nextSummary = await requestIntelligenceSummary(feedData, userApiKey.trim())
-      setSummaryText(nextSummary)
+      onSummaryChange(nextSummary, new Date().toISOString())
       setSummaryStatus('ready')
     } catch (error) {
       setSummaryStatus('error')
@@ -196,6 +214,7 @@ export function HomePage({ feedData, serviceData, weatherState, onRefresh, onRef
           </>
         ) : null}
         {summaryText ? <p className="summary">{summaryText}</p> : null}
+        {summaryText && summaryGeneratedLabel ? <p className="muted">Last generated: {summaryGeneratedLabel}</p> : null}
         {summaryStatus === 'loading' ? <p className="muted">Requesting summary from the LLM API...</p> : null}
         {summaryStatus === 'error' ? <p className="error-text">{summaryError}</p> : null}
       </section>

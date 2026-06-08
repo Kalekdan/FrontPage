@@ -11,6 +11,44 @@ function App() {
   const [refreshKey, setRefreshKey] = useState(0)
   const [serviceRefreshKey, setServiceRefreshKey] = useState(0)
   const [isBookmarkSidebarOpen, setIsBookmarkSidebarOpen] = useState(true)
+  const [intelligenceSummary, setIntelligenceSummary] = useState(() => {
+    if (typeof window === 'undefined') {
+      return ''
+    }
+
+    return window.localStorage.getItem('frontpage.intelligenceSummary') ?? ''
+  })
+  const [intelligenceSummaryGeneratedAt, setIntelligenceSummaryGeneratedAt] = useState(() => {
+    if (typeof window === 'undefined') {
+      return ''
+    }
+
+    return window.localStorage.getItem('frontpage.intelligenceSummaryGeneratedAt') ?? ''
+  })
+
+  function handleSummaryChange(nextSummary, nextGeneratedAt = '') {
+    setIntelligenceSummary(nextSummary)
+    setIntelligenceSummaryGeneratedAt(nextGeneratedAt)
+
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    if (nextSummary) {
+      window.localStorage.setItem('frontpage.intelligenceSummary', nextSummary)
+
+      if (nextGeneratedAt) {
+        window.localStorage.setItem('frontpage.intelligenceSummaryGeneratedAt', nextGeneratedAt)
+      } else {
+        window.localStorage.removeItem('frontpage.intelligenceSummaryGeneratedAt')
+      }
+
+      return
+    }
+
+    window.localStorage.removeItem('frontpage.intelligenceSummary')
+    window.localStorage.removeItem('frontpage.intelligenceSummaryGeneratedAt')
+  }
   const route = useHashRoute()
   const feedData = useFeedData(refreshKey)
   const serviceData = useServiceStatus(serviceRefreshKey)
@@ -119,6 +157,9 @@ function App() {
       feedData={feedData}
       serviceData={serviceData}
       weatherState={weatherState}
+      summaryText={intelligenceSummary}
+      summaryGeneratedAt={intelligenceSummaryGeneratedAt}
+      onSummaryChange={handleSummaryChange}
       onRefresh={() => setRefreshKey((value) => value + 1)}
       onRefreshServices={() => setServiceRefreshKey((value) => value + 1)}
       isBookmarkSidebarOpen={isBookmarkSidebarOpen}
