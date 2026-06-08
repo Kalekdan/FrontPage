@@ -28,12 +28,36 @@ export function BookmarkSidebar({ isOpen, onToggle }) {
   const searchInputRef = useRef(null)
   const topSearchResult = matchingBookmarks[0]
 
+  function openGoogleSearch(query) {
+    const trimmedQuery = query.trim()
+
+    if (!trimmedQuery) {
+      return
+    }
+
+    const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(trimmedQuery)}`
+    window.location.assign(searchUrl)
+  }
+
   function openTopSearchResult() {
     if (!topSearchResult?.url) {
       return
     }
 
     window.location.assign(topSearchResult.url)
+  }
+
+  function submitSearch() {
+    if (!searchValue.trim()) {
+      return
+    }
+
+    if (topSearchResult) {
+      openTopSearchResult()
+      return
+    }
+
+    openGoogleSearch(searchValue)
   }
 
   useEffect(() => {
@@ -54,9 +78,9 @@ export function BookmarkSidebar({ isOpen, onToggle }) {
       }
 
       if (event.key === 'Enter') {
-        if (searchValue && topSearchResult) {
+        if (searchValue.trim()) {
           event.preventDefault()
-          openTopSearchResult()
+          submitSearch()
         }
         return
       }
@@ -124,9 +148,9 @@ export function BookmarkSidebar({ isOpen, onToggle }) {
                 value={searchValue}
                 onChange={(event) => setSearchValue(event.target.value)}
                 onKeyDown={(event) => {
-                  if (event.key === 'Enter' && searchValue && topSearchResult) {
+                  if (event.key === 'Enter' && searchValue.trim()) {
                     event.preventDefault()
-                    openTopSearchResult()
+                    submitSearch()
                   }
                 }}
               />
@@ -203,7 +227,7 @@ export function BookmarkSidebar({ isOpen, onToggle }) {
             })
           : null}
 
-        {isOpen && searchValue && !matchingBookmarks.length ? <p className="muted">No bookmarks match the current search.</p> : null}
+        {isOpen && searchValue && !matchingBookmarks.length ? <p className="muted">No matching bookmarks. Press enter to search on the web.</p> : null}
       </div>
     </aside>
   )
