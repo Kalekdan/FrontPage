@@ -6,6 +6,7 @@ import {
   FiChevronRight,
   FiExternalLink,
   FiSearch,
+  FiSettings,
   FiStar,
 } from 'react-icons/fi'
 import { WiCloud, WiCloudy, WiDaySunny, WiFog, WiRain, WiSnow, WiThunderstorm, WiStrongWind } from 'react-icons/wi'
@@ -489,24 +490,143 @@ function getOverallServiceState(services) {
   return 'all systems operational'
 }
 
-function buildIntelligenceSummary(serviceData, weatherState, headlines) {
-  const offlineCount = serviceData.filter((service) => service.state === 'offline').length
-  const degradedCount = serviceData.filter((service) => service.state === 'degraded').length
-  const serviceSummary =
-    offlineCount > 0
-      ? `${offlineCount} service${offlineCount === 1 ? '' : 's'} offline`
-      : degradedCount > 0
-        ? `${degradedCount} service${degradedCount === 1 ? '' : 's'} degraded`
-        : 'network systems stable'
+function getFeedPayloadForSummary(feedData) {
+  return dashboardConfig.rss.feeds.map((feed) => {
+    const state = feedData[feed.id] ?? { status: 'loading', items: [] }
 
-  const weatherSummary =
-    weatherState.status === 'ready'
-      ? `${weatherCodeLookup[weatherState.weatherCode] ?? 'mixed conditions'} in ${dashboardConfig.weather.label}`
-      : 'weather data still loading'
+    return {
+      id: feed.id,
+      name: feed.name,
+      description: feed.description,
+      status: state.status,
+      items: (state.items ?? []).map((item) => ({
+        title: item.title,
+        description: item.description,
+        pubDate: item.pubDate,
+        link: item.link,
+      })),
+    }
+  })
+}
 
-  const headlineSummary = headlines[0]?.title ? `Top story: ${headlines[0].title}.` : 'No headlines available right now.'
+function getSummaryRequestPrompt(feedData) {
+  const payload = getFeedPayloadForSummary(feedData)
 
-  return `${serviceSummary}, ${weatherSummary}. ${headlineSummary}`
+  return [
+    'Create a concise intelligence summary from these RSS feeds.',
+    'Requirements:',
+    '- Use only the provided feed data.',
+    '- Focus on major themes, notable changes, and high-impact stories.',
+    '- Keep it to 4-6 sentences.',
+    '- Mention uncertainty when a feed has no data or failed to load.',
+    '',
+    'Feed data JSON:',
+    JSON.stringify(payload),
+  ].join('\n')
+}
+
+function getSummaryFromApiResponse(payload) {
+  if (!payload || typeof payload !== 'object') {
+    return ''
+  }
+
+  if (typeof payload.summary === 'string' && payload.summary.trim()) {
+    return payload.summary.trim()
+  }
+
+  const choiceContent = payload.choices?.[0]?.message?.content
+  if (typeof choiceContent === 'string' && choiceContent.trim()) {
+    return choiceContent.trim()
+  }
+
+  const outputText = payload.output_text
+  if (typeof outputText === 'string' && outputText.trim()) {
+    return outputText.trim()
+  }
+
+  const contentBlocks = payload.content
+  if (Array.isArray(contentBlocks)) {
+    const textValue = contentBlocks
+      .map((block) => block?.text)
+      .filter(Boolean)
+      .join(' ')
+      .trim()
+
+    if (textValue) {
+      return textValue
+    }
+  }
+
+  return ''
+}
+
+async function requestIntelligenceSummary(feedData, userApiKey = '') {
+  const llmConfig = dashboardConfig.llm ?? {}
+  const apiUrl = llmConfig.summaryApiUrl
+
+  if (!apiUrl) {
+    throw new Error('Missing LLM API URL. Add dashboardConfig.llm.summaryApiUrl in frontpage.config.js.')
+  }
+
+  const model = llmConfig.model ?? 'gpt-4.1-mini'
+  const systemPrompt =
+    llmConfig.systemPrompt ??
+    'You summarize RSS feed intelligence for a dashboard. Be factual, concise, and avoid speculation.'
+
+  const requestBody = {
+    model,
+    temperature: 0.2,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: getSummaryRequestPrompt(feedData) },
+    ],
+  }
+
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(llmConfig.headers ?? {}),
+  }
+
+  const apiKey = userApiKey || llmConfig.apiKey
+  if (apiKey) {
+    headers.Authorization = `Bearer ${apiKey}`
+  } else {
+    throw new Error('Missing API key. Add one in the Intelligence Summary panel.')
+  }
+
+  const controller = new AbortController()
+  const timeoutMs = llmConfig.timeoutMs ?? 20000
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs)
+
+  try {
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(requestBody),
+      signal: controller.signal,
+    })
+
+    const payload = await response.json().catch(() => ({}))
+
+    if (!response.ok) {
+      const apiError = payload?.error?.message || payload?.message || `HTTP ${response.status}`
+      throw new Error(`Summary request failed: ${apiError}`)
+    }
+
+    const summaryText = getSummaryFromApiResponse(payload)
+    if (!summaryText) {
+      throw new Error('Summary API returned no usable text.')
+    }
+
+    return summaryText
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('Summary request timed out.')
+    }
+    throw error
+  } finally {
+    window.clearTimeout(timeoutId)
+  }
 }
 
 function collectHeadlines(feedData) {
@@ -882,7 +1002,17 @@ function DashboardChrome({ children, routePage, onRefresh, onNewWidget, isBookma
 
 function HomePage({ feedData, serviceData, weatherState, onRefresh, isBookmarkSidebarOpen, onToggleBookmarkSidebar }) {
   const headlines = collectHeadlines(feedData)
-  const summaryText = buildIntelligenceSummary(serviceData, weatherState, headlines)
+  const [summaryText, setSummaryText] = useState('')
+  const [summaryStatus, setSummaryStatus] = useState('idle')
+  const [summaryError, setSummaryError] = useState('')
+  const [showSummarySettings, setShowSummarySettings] = useState(false)
+  const [userApiKey, setUserApiKey] = useState(() => {
+    if (typeof window === 'undefined') {
+      return ''
+    }
+
+    return window.localStorage.getItem('frontpage.openaiApiKey') ?? ''
+  })
   const overallServiceState = getOverallServiceState(serviceData)
   const weatherVisual = getWeatherVisual(weatherState.weatherCode)
   const WeatherIcon = weatherVisual.Icon
@@ -896,6 +1026,32 @@ function HomePage({ feedData, serviceData, weatherState, onRefresh, isBookmarkSi
   const failedFeedTooltip = failedFeeds
     .map((feed) => `${feed.name}: ${feed.state.error || 'Unable to load feed.'}`)
     .join('\n')
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    if (userApiKey) {
+      window.localStorage.setItem('frontpage.openaiApiKey', userApiKey)
+      return
+    }
+
+    window.localStorage.removeItem('frontpage.openaiApiKey')
+  }, [userApiKey])
+
+  async function handleGenerateSummary() {
+    try {
+      setSummaryStatus('loading')
+      setSummaryError('')
+      const nextSummary = await requestIntelligenceSummary(feedData, userApiKey.trim())
+      setSummaryText(nextSummary)
+      setSummaryStatus('ready')
+    } catch (error) {
+      setSummaryStatus('error')
+      setSummaryError(error.message || 'Unable to generate summary.')
+    }
+  }
 
   return (
     <DashboardChrome
@@ -971,8 +1127,60 @@ function HomePage({ feedData, serviceData, weatherState, onRefresh, isBookmarkSi
       </section>
 
       <section className="panel intelligence">
-        <p className="eyebrow">Intelligence Summary</p>
-        <p className="summary">{summaryText}</p>
+        <div className="intelligence-header">
+          <div className="intelligence-title-row">
+            <p className="eyebrow">Intelligence Summary</p>
+            <button
+              className="summary-settings-button"
+              type="button"
+              onClick={() => setShowSummarySettings((value) => !value)}
+              aria-label={showSummarySettings ? 'Hide API key settings' : 'Show API key settings'}
+              aria-expanded={showSummarySettings}
+              aria-controls="summary-key-settings"
+            >
+              <FiSettings aria-hidden="true" />
+            </button>
+          </div>
+          <button
+            className="summary-generate-button"
+            type="button"
+            onClick={handleGenerateSummary}
+            disabled={summaryStatus === 'loading'}
+          >
+            {summaryStatus === 'loading' ? 'Generating...' : 'Generate summary'}
+          </button>
+        </div>
+        {showSummarySettings ? (
+          <>
+            <div className="summary-key-row" id="summary-key-settings">
+              <label className="summary-key-label" htmlFor="summary-api-key">
+                OpenAI API key
+              </label>
+              <input
+                className="summary-key-input"
+                id="summary-api-key"
+                type="password"
+                value={userApiKey}
+                onChange={(event) => setUserApiKey(event.target.value)}
+                placeholder="sk-..."
+                autoComplete="off"
+                spellCheck={false}
+              />
+              <button
+                className="summary-key-clear"
+                type="button"
+                onClick={() => setUserApiKey('')}
+                disabled={!userApiKey}
+              >
+                Clear
+              </button>
+            </div>
+            <p className="muted">Stored locally in this browser only.</p>
+          </>
+        ) : null}
+        {summaryText ? <p className="summary">{summaryText}</p> : null}
+        {summaryStatus === 'loading' ? <p className="muted">Requesting summary from the LLM API...</p> : null}
+        {summaryStatus === 'error' ? <p className="error-text">{summaryError}</p> : null}
       </section>
 
       <section className="headlines-block">

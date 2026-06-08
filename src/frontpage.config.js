@@ -76,7 +76,22 @@ export const dashboardConfig = {
         description: 'UK headlines from BBC News.',
         itemLimit: 0,
       },
+      {
+        id: 'marketwatch',
+        name: 'MarketWatch',
+        url: 'https://feeds.content.dowjones.io/public/rss/mw_topstories',
+        description: 'Top financial news from MarketWatch.',
+        itemLimit: 0,
+      }
     ],
+  },
+  llm: {
+    summaryApiUrl: 'https://api.openai.com/v1/chat/completions',
+    apiKey: '',
+    model: 'gpt-4.1-mini',
+    timeoutMs: 200000,
+    systemPrompt: 'You summarize RSS feed intelligence for a dashboard. Be factual, concise, and avoid speculation. Keep your summary to 3 or 4 sentences max.',
+    headers: {},
   },
   services: [
     {
