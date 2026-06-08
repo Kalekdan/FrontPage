@@ -507,7 +507,7 @@ function collectHeadlines(feedData) {
       })),
     )
     .sort((a, b) => toTimestamp(b.pubDate) - toTimestamp(a.pubDate))
-    .slice(0, 9)
+    .slice(0, 12)
 }
 
 function DashboardChrome({ children, routePage, onRefresh }) {
