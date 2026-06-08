@@ -57,7 +57,7 @@ function formatDate(value) {
 
 function buildSummary(feedName, items) {
   if (!items.length) {
-    return `AI summary: ${feedName} has no recent stories available right now.`
+    return `Summary: ${feedName} has no recent stories available right now.`
   }
 
   const headlineList = items
@@ -65,7 +65,7 @@ function buildSummary(feedName, items) {
     .map((item) => item.title)
     .filter(Boolean)
 
-  return `AI summary: ${feedName} is currently focused on ${headlineList.join(', ')}.`
+  return `Summary: ${feedName} is currently focused on ${headlineList.join(', ')}.`
 }
 
 function buildFeedRequest(feed) {
@@ -133,7 +133,7 @@ function useFeedData(refreshKey) {
               {
                 status: 'error',
                 items: [],
-                summary: `AI summary unavailable: ${error.message}`,
+                summary: `Summary unavailable: ${error.message}`,
                 error: error.message,
               },
             ]
@@ -279,7 +279,7 @@ function FeedCard({ feed, state }) {
         </a>
       </div>
       <p className="muted">{feed.description}</p>
-      <p className="summary">{state.summary || 'Generating AI summary...'}</p>
+      <p className="summary">{state.summary || 'Generating summary...'}</p>
       {state.status === 'ready' && state.items[0] ? (
         <ul className="headline-list">
           {state.items.slice(0, 3).map((item) => (
