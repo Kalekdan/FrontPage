@@ -22,7 +22,6 @@ Edit `src/frontpage.config.js` to change:
 - `rss.corsProxyUrl`: optional CORS proxy endpoint if a feed blocks direct browser requests; supports either a prefix URL or a `{url}` placeholder
 - `llm`: endpoint and request settings for the Intelligence Summary "Generate summary" button
 	- `llm.summaryApiUrl`: OpenAI-compatible chat endpoint to call from the browser
-	- `llm.apiKey`: bearer token for the endpoint (optional if your endpoint does not require it)
 	- `llm.model`: model name sent in the request body
 	- `llm.timeoutMs`: request timeout for summary generation
 	- `llm.systemPrompt`: optional system instruction for the summarizer

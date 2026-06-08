@@ -611,7 +611,7 @@ export async function requestIntelligenceSummary(feedData, userApiKey = '') {
     ...(llmConfig.headers ?? {}),
   }
 
-  const apiKey = userApiKey || llmConfig.apiKey
+  const apiKey = userApiKey
   if (apiKey) {
     headers.Authorization = `Bearer ${apiKey}`
   } else {

@@ -119,7 +119,6 @@ export const dashboardConfig = {
   },
   llm: {
     summaryApiUrl: 'https://api.openai.com/v1/chat/completions',
-    apiKey: '',
     model: 'gpt-4.1-mini',
     timeoutMs: 200000,
     systemPrompt: 'You summarize RSS feed intelligence for a dashboard. Be factual, concise, and avoid speculation. Keep your summary to 3 or 4 sentences max.',
