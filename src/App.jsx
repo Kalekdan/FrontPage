@@ -543,6 +543,15 @@ function matchesBookmarkSearch(bookmark, searchValue) {
 function getBookmarkSections(searchValue) {
   const bookmarks = dashboardConfig.bookmarks ?? []
   const matchingBookmarks = bookmarks.filter((bookmark) => matchesBookmarkSearch(bookmark, searchValue))
+
+  if (searchValue) {
+    return {
+      totalMatches: matchingBookmarks.length,
+      sections: [],
+      matchingBookmarks,
+    }
+  }
+
   const starred = matchingBookmarks.filter((bookmark) => bookmark.starred)
   const taggedGroups = new Map()
   const untagged = []
@@ -579,30 +588,19 @@ function getBookmarkSections(searchValue) {
   return {
     totalMatches: matchingBookmarks.length,
     sections,
+    matchingBookmarks,
   }
-}
-
-function getBookmarkSectionHint(section) {
-  if (section.id === 'starred') {
-    return 'Pinned bookmarks always stay at the top.'
-  }
-
-  if (section.id === 'untagged') {
-    return 'Bookmarks without tags.'
-  }
-
-  return `Bookmarks tagged ${section.label}.`
 }
 
 function BookmarkSidebar({ isOpen, onToggle }) {
   const [searchValue, setSearchValue] = useState('')
   const [collapsedSections, setCollapsedSections] = useState({})
-  const { sections, totalMatches } = getBookmarkSections(searchValue)
+  const { sections, totalMatches, matchingBookmarks } = getBookmarkSections(searchValue)
 
   function toggleSection(sectionId) {
     setCollapsedSections((currentValue) => ({
       ...currentValue,
-      [sectionId]: !currentValue[sectionId],
+      [sectionId]: !(currentValue[sectionId] ?? sectionId !== 'starred'),
     }))
   }
 
@@ -650,7 +648,24 @@ function BookmarkSidebar({ isOpen, onToggle }) {
           </div>
         ) : null}
 
-        {isOpen
+        {isOpen && searchValue ? (
+          <div className="bookmark-list">
+            {matchingBookmarks.map((bookmark) => (
+              <a className="bookmark-card" href={bookmark.url} key={bookmark.id} target="_blank" rel="noreferrer">
+                <div className="bookmark-card-head">
+                  <strong>{bookmark.title}</strong>
+                  <span className="bookmark-icons">
+                    {bookmark.starred ? <FiStar aria-hidden="true" /> : null}
+                    <FiExternalLink aria-hidden="true" />
+                  </span>
+                </div>
+                {bookmark.description ? <p>{bookmark.description}</p> : null}
+              </a>
+            ))}
+          </div>
+        ) : null}
+
+        {isOpen && !searchValue
           ? sections.map((section) => {
               const isCollapsed = collapsedSections[section.id] ?? section.id !== 'starred'
 
@@ -669,7 +684,6 @@ function BookmarkSidebar({ isOpen, onToggle }) {
                         <FiChevronDown className={isCollapsed ? 'collapsed' : ''} aria-hidden="true" />
                       </span>
                     </button>
-                    <p className="bookmark-section-hint">{getBookmarkSectionHint(section)}</p>
                   </div>
 
                   {!isCollapsed ? (
@@ -693,7 +707,7 @@ function BookmarkSidebar({ isOpen, onToggle }) {
             })
           : null}
 
-        {isOpen && !sections.length ? <p className="muted">No bookmarks match the current search.</p> : null}
+        {isOpen && searchValue && !matchingBookmarks.length ? <p className="muted">No bookmarks match the current search.</p> : null}
       </div>
     </aside>
   )
