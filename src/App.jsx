@@ -978,15 +978,6 @@ function DashboardChrome({ children, routePage, onRefresh, onNewWidget, isBookma
               <FiBookmark aria-hidden="true" />
               Bookmarks
             </button>
-            <span className="icon-chip" aria-hidden="true">
-              O
-            </span>
-            <span className="icon-chip" aria-hidden="true">
-              !
-            </span>
-            <span className="icon-chip" aria-hidden="true">
-              *
-            </span>
             {onRefresh ? (
               <button className="refresh-button" type="button" onClick={onRefresh}>
                 Refresh all
