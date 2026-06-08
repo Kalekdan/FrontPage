@@ -57,6 +57,38 @@ export const dashboardConfig = {
       description: 'Video content and subscriptions.',
       tags: ['Entertainment'],
       starred: false,
+    },
+    {
+      id: 'reddit',
+      title: 'Reddit',
+      url: 'https://www.reddit.com/',
+      description: 'News, discussions, and communities.',
+      tags: ['Entertainment', 'News'],
+      starred: false,
+    },
+    {
+      id: 'goodreads',
+      title: 'Goodreads',
+      url: 'https://www.goodreads.com/',
+      description: 'Book tracking and reviews.',
+      tags: ['Entertainment'],
+      starred: false,
+    },
+    {
+      id: 'amazon',
+      title: 'Amazon',
+      url: 'https://www.amazon.co.uk/',
+      description: 'Online shopping and product reviews.',
+      tags: ['Shopping'],
+      starred: false,
+    },
+    {
+      id: 'op.gg',
+      title: 'OP.GG',
+      url: 'https://www.op.gg/',
+      description: 'League of Legends stats and rankings.',
+      tags: ['Gaming'],
+      starred: false,
     }
   ],
   rss: {
@@ -82,7 +114,7 @@ export const dashboardConfig = {
         url: 'https://feeds.content.dowjones.io/public/rss/mw_topstories',
         description: 'Top financial news from MarketWatch.',
         itemLimit: 0,
-      }
+      },
     ],
   },
   llm: {

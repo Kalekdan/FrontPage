@@ -1182,7 +1182,6 @@ button {
   border-radius: 0.7rem;
   display: block;
   max-height: 260px;
-  filter: grayscale(0.92) brightness(0.78) contrast(0.95);
   transition: filter 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
   object-fit: cover;
   width: 100%;
@@ -1190,7 +1189,6 @@ button {
 
 .detail-card:hover .detail-image,
 .detail-card:focus-within .detail-image {
-  filter: grayscale(0.1) brightness(0.98) contrast(1);
   transform: scale(1.01);
 }
 

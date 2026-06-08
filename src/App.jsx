@@ -677,11 +677,13 @@ function getBookmarkSections(searchValue) {
   const taggedGroups = new Map()
   const untagged = []
 
-  for (const bookmark of matchingBookmarks.filter((entry) => !entry.starred)) {
+  for (const bookmark of matchingBookmarks) {
     const tags = (bookmark.tags ?? []).filter(Boolean)
 
     if (!tags.length) {
-      untagged.push(bookmark)
+      if (!bookmark.starred) {
+        untagged.push(bookmark)
+      }
       continue
     }
 
