@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react'
+import {
+  FiBookmark,
+  FiChevronDown,
+  FiChevronLeft,
+  FiChevronRight,
+  FiExternalLink,
+  FiSearch,
+  FiStar,
+} from 'react-icons/fi'
 import { WiCloud, WiCloudy, WiDaySunny, WiFog, WiRain, WiSnow, WiThunderstorm, WiStrongWind } from 'react-icons/wi'
 import './App.css'
 import { dashboardConfig } from './frontpage.config.js'
 
 const weatherCodeLookup = {
   0: 'Clear sky',
-  1: 'Mainly clear',
   2: 'Partly cloudy',
   3: 'Overcast',
   45: 'Fog',
@@ -519,7 +527,179 @@ function collectHeadlines(feedData) {
     .slice(0, 12)
 }
 
-function DashboardChrome({ children, routePage, onRefresh, onNewWidget }) {
+function matchesBookmarkSearch(bookmark, searchValue) {
+  if (!searchValue) {
+    return true
+  }
+
+  const haystack = [bookmark.title, bookmark.description, bookmark.url, ...(bookmark.tags ?? [])]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+
+  return haystack.includes(searchValue.toLowerCase())
+}
+
+function getBookmarkSections(searchValue) {
+  const bookmarks = dashboardConfig.bookmarks ?? []
+  const matchingBookmarks = bookmarks.filter((bookmark) => matchesBookmarkSearch(bookmark, searchValue))
+  const starred = matchingBookmarks.filter((bookmark) => bookmark.starred)
+  const taggedGroups = new Map()
+  const untagged = []
+
+  for (const bookmark of matchingBookmarks.filter((entry) => !entry.starred)) {
+    const tags = (bookmark.tags ?? []).filter(Boolean)
+
+    if (!tags.length) {
+      untagged.push(bookmark)
+      continue
+    }
+
+    for (const tag of tags) {
+      const currentGroup = taggedGroups.get(tag) ?? []
+      currentGroup.push(bookmark)
+      taggedGroups.set(tag, currentGroup)
+    }
+  }
+
+  const sections = []
+
+  if (starred.length) {
+    sections.push({ id: 'starred', label: 'Starred', items: starred })
+  }
+
+  for (const [tag, items] of Array.from(taggedGroups.entries()).sort((a, b) => a[0].localeCompare(b[0]))) {
+    sections.push({ id: `tag-${tag.toLowerCase().replace(/\s+/g, '-')}`, label: tag, items })
+  }
+
+  if (untagged.length) {
+    sections.push({ id: 'untagged', label: 'Other', items: untagged })
+  }
+
+  return {
+    totalMatches: matchingBookmarks.length,
+    sections,
+  }
+}
+
+function getBookmarkSectionHint(section) {
+  if (section.id === 'starred') {
+    return 'Pinned bookmarks always stay at the top.'
+  }
+
+  if (section.id === 'untagged') {
+    return 'Bookmarks without tags.'
+  }
+
+  return `Bookmarks tagged ${section.label}.`
+}
+
+function BookmarkSidebar({ isOpen, onToggle }) {
+  const [searchValue, setSearchValue] = useState('')
+  const [collapsedSections, setCollapsedSections] = useState({})
+  const { sections, totalMatches } = getBookmarkSections(searchValue)
+
+  function toggleSection(sectionId) {
+    setCollapsedSections((currentValue) => ({
+      ...currentValue,
+      [sectionId]: !currentValue[sectionId],
+    }))
+  }
+
+  return (
+    <aside className={`bookmark-sidebar${isOpen ? ' open' : ' collapsed'}`} aria-label="Bookmarks">
+      <div className="bookmark-sidebar-head">
+        <div className="bookmark-title-row">
+          <div>
+            <p className="eyebrow">Bookmarks</p>
+            {isOpen ? <h2>Quick access</h2> : null}
+          </div>
+          <button
+            className="bookmark-toggle"
+            type="button"
+            onClick={onToggle}
+            aria-expanded={isOpen}
+            aria-controls="bookmark-sidebar-body"
+            aria-label={isOpen ? 'Collapse bookmarks sidebar' : 'Expand bookmarks sidebar'}
+          >
+            {isOpen ? <FiChevronRight aria-hidden="true" /> : <FiChevronLeft aria-hidden="true" />}
+          </button>
+        </div>
+        {isOpen ? (
+          <>
+            <label className="bookmark-search" htmlFor="bookmark-search">
+              <FiSearch aria-hidden="true" />
+              <input
+                id="bookmark-search"
+                type="search"
+                placeholder="Search bookmarks"
+                value={searchValue}
+                onChange={(event) => setSearchValue(event.target.value)}
+              />
+            </label>
+            <p className="bookmark-count">{totalMatches} matching bookmark{totalMatches === 1 ? '' : 's'}</p>
+          </>
+        ) : null}
+      </div>
+
+      <div className="bookmark-sidebar-body" id="bookmark-sidebar-body">
+        {!isOpen ? (
+          <div className="bookmark-sidebar-mini" aria-hidden="true">
+            <FiBookmark />
+            <span>{dashboardConfig.bookmarks?.length ?? 0}</span>
+          </div>
+        ) : null}
+
+        {isOpen
+          ? sections.map((section) => {
+              const isCollapsed = collapsedSections[section.id] ?? section.id !== 'starred'
+
+              return (
+                <section className="bookmark-section" key={section.id}>
+                  <div className="bookmark-section-head">
+                    <button
+                      className="bookmark-section-toggle"
+                      type="button"
+                      onClick={() => toggleSection(section.id)}
+                      aria-expanded={!isCollapsed}
+                    >
+                      <span>{section.label}</span>
+                      <span className="bookmark-section-meta">
+                        <span>{section.items.length}</span>
+                        <FiChevronDown className={isCollapsed ? 'collapsed' : ''} aria-hidden="true" />
+                      </span>
+                    </button>
+                    <p className="bookmark-section-hint">{getBookmarkSectionHint(section)}</p>
+                  </div>
+
+                  {!isCollapsed ? (
+                    <div className="bookmark-list">
+                      {section.items.map((bookmark) => (
+                        <a className="bookmark-card" href={bookmark.url} key={`${section.id}-${bookmark.id}`} target="_blank" rel="noreferrer">
+                          <div className="bookmark-card-head">
+                            <strong>{bookmark.title}</strong>
+                            <span className="bookmark-icons">
+                              {bookmark.starred ? <FiStar aria-hidden="true" /> : null}
+                              <FiExternalLink aria-hidden="true" />
+                            </span>
+                          </div>
+                          {bookmark.description ? <p>{bookmark.description}</p> : null}
+                        </a>
+                      ))}
+                    </div>
+                  ) : null}
+                </section>
+              )
+            })
+          : null}
+
+        {isOpen && !sections.length ? <p className="muted">No bookmarks match the current search.</p> : null}
+      </div>
+    </aside>
+  )
+}
+
+function DashboardChrome({ children, routePage, onRefresh, onNewWidget, isBookmarkSidebarOpen, onToggleBookmarkSidebar }) {
   const menuItems = [
     { label: 'Home', page: 'home', href: '#/' },
     { label: 'Insights', page: 'insights', href: '#/insights' },
@@ -534,7 +714,7 @@ function DashboardChrome({ children, routePage, onRefresh, onNewWidget }) {
   ]
 
   return (
-    <div className="dashboard-shell">
+    <div className={`dashboard-shell${isBookmarkSidebarOpen ? ' bookmark-sidebar-open' : ''}`}>
       <aside className="sidebar">
         <div className="brand-block">
           <p className="brand-title">JR's Dashboard</p>
@@ -581,6 +761,10 @@ function DashboardChrome({ children, routePage, onRefresh, onNewWidget }) {
             })}
           </nav>
           <div className="top-actions">
+            <button className="bookmark-launcher" type="button" onClick={onToggleBookmarkSidebar}>
+              <FiBookmark aria-hidden="true" />
+              Bookmarks
+            </button>
             <span className="icon-chip" aria-hidden="true">
               O
             </span>
@@ -600,11 +784,13 @@ function DashboardChrome({ children, routePage, onRefresh, onNewWidget }) {
 
         <div className="dashboard-content">{children}</div>
       </section>
+
+      {isBookmarkSidebarOpen ? <BookmarkSidebar isOpen={isBookmarkSidebarOpen} onToggle={onToggleBookmarkSidebar} /> : null}
     </div>
   )
 }
 
-function HomePage({ feedData, serviceData, weatherState, onRefresh }) {
+function HomePage({ feedData, serviceData, weatherState, onRefresh, isBookmarkSidebarOpen, onToggleBookmarkSidebar }) {
   const headlines = collectHeadlines(feedData)
   const summaryText = buildIntelligenceSummary(serviceData, weatherState, headlines)
   const overallServiceState = getOverallServiceState(serviceData)
@@ -622,7 +808,13 @@ function HomePage({ feedData, serviceData, weatherState, onRefresh }) {
     .join('\n')
 
   return (
-    <DashboardChrome routePage="home" onRefresh={onRefresh} onNewWidget={() => (window.location.hash = '/widgets/new')}>
+    <DashboardChrome
+      routePage="home"
+      onRefresh={onRefresh}
+      onNewWidget={() => (window.location.hash = '/widgets/new')}
+      isBookmarkSidebarOpen={isBookmarkSidebarOpen}
+      onToggleBookmarkSidebar={onToggleBookmarkSidebar}
+    >
       <section className="top-grid">
         <article className="panel weather-panel">
           <div className="weather-header">
@@ -793,9 +985,14 @@ function FeedCard({ feed, state }) {
   )
 }
 
-function FeedDetailPage({ feed, state }) {
+function FeedDetailPage({ feed, state, isBookmarkSidebarOpen, onToggleBookmarkSidebar }) {
   return (
-    <DashboardChrome routePage="feed" onNewWidget={() => (window.location.hash = '/widgets/new')}>
+    <DashboardChrome
+      routePage="feed"
+      onNewWidget={() => (window.location.hash = '/widgets/new')}
+      isBookmarkSidebarOpen={isBookmarkSidebarOpen}
+      onToggleBookmarkSidebar={onToggleBookmarkSidebar}
+    >
       <section className="panel detail-header">
         <a className="back-link" href="#/">
           Back to dashboard
@@ -826,9 +1023,15 @@ function FeedDetailPage({ feed, state }) {
   )
 }
 
-function SectionPage({ routePage, title, description, onRefresh }) {
+function SectionPage({ routePage, title, description, onRefresh, isBookmarkSidebarOpen, onToggleBookmarkSidebar }) {
   return (
-    <DashboardChrome routePage={routePage} onRefresh={onRefresh} onNewWidget={() => (window.location.hash = '/widgets/new')}>
+    <DashboardChrome
+      routePage={routePage}
+      onRefresh={onRefresh}
+      onNewWidget={() => (window.location.hash = '/widgets/new')}
+      isBookmarkSidebarOpen={isBookmarkSidebarOpen}
+      onToggleBookmarkSidebar={onToggleBookmarkSidebar}
+    >
       <section className="panel detail-header">
         <p className="eyebrow">{title}</p>
         <h1>{title}</h1>
@@ -840,6 +1043,7 @@ function SectionPage({ routePage, title, description, onRefresh }) {
 
 function App() {
   const [refreshKey, setRefreshKey] = useState(0)
+  const [isBookmarkSidebarOpen, setIsBookmarkSidebarOpen] = useState(true)
   const route = useHashRoute()
   const feedData = useFeedData(refreshKey)
   const serviceData = useServiceStatus(refreshKey)
@@ -847,7 +1051,14 @@ function App() {
   const activeFeed = dashboardConfig.rss.feeds.find((feed) => feed.id === route.feedId)
 
   if (route.page === 'feed' && activeFeed) {
-    return <FeedDetailPage feed={activeFeed} state={feedData[activeFeed.id] ?? { summary: '', items: [] }} />
+    return (
+      <FeedDetailPage
+        feed={activeFeed}
+        state={feedData[activeFeed.id] ?? { summary: '', items: [] }}
+        isBookmarkSidebarOpen={isBookmarkSidebarOpen}
+        onToggleBookmarkSidebar={() => setIsBookmarkSidebarOpen((value) => !value)}
+      />
+    )
   }
 
   if (route.page === 'insights') {
@@ -857,6 +1068,8 @@ function App() {
         title="Insights"
         description="Explore signal trends, feed summaries, and intelligence snapshots."
         onRefresh={() => setRefreshKey((value) => value + 1)}
+        isBookmarkSidebarOpen={isBookmarkSidebarOpen}
+        onToggleBookmarkSidebar={() => setIsBookmarkSidebarOpen((value) => !value)}
       />
     )
   }
@@ -868,6 +1081,8 @@ function App() {
         title="Automation"
         description="Create and manage automation routines for recurring operations."
         onRefresh={() => setRefreshKey((value) => value + 1)}
+        isBookmarkSidebarOpen={isBookmarkSidebarOpen}
+        onToggleBookmarkSidebar={() => setIsBookmarkSidebarOpen((value) => !value)}
       />
     )
   }
@@ -879,6 +1094,8 @@ function App() {
         title="Network"
         description="Track network health, uptime history, and endpoint diagnostics."
         onRefresh={() => setRefreshKey((value) => value + 1)}
+        isBookmarkSidebarOpen={isBookmarkSidebarOpen}
+        onToggleBookmarkSidebar={() => setIsBookmarkSidebarOpen((value) => !value)}
       />
     )
   }
@@ -890,6 +1107,8 @@ function App() {
         title="Security"
         description="Review alerts, patch posture, and risk indicators across systems."
         onRefresh={() => setRefreshKey((value) => value + 1)}
+        isBookmarkSidebarOpen={isBookmarkSidebarOpen}
+        onToggleBookmarkSidebar={() => setIsBookmarkSidebarOpen((value) => !value)}
       />
     )
   }
@@ -900,6 +1119,8 @@ function App() {
         routePage="home"
         title="Support"
         description="Support options are coming next: runbooks, contact channels, and escalation flows."
+        isBookmarkSidebarOpen={isBookmarkSidebarOpen}
+        onToggleBookmarkSidebar={() => setIsBookmarkSidebarOpen((value) => !value)}
       />
     )
   }
@@ -910,6 +1131,8 @@ function App() {
         routePage="home"
         title="Log out"
         description="Sign out flow is not connected yet. Wire this route to your authentication provider."
+        isBookmarkSidebarOpen={isBookmarkSidebarOpen}
+        onToggleBookmarkSidebar={() => setIsBookmarkSidebarOpen((value) => !value)}
       />
     )
   }
@@ -920,6 +1143,8 @@ function App() {
         routePage="automation"
         title="New Widget"
         description="Widget creation has been stubbed. Add a form and persistence workflow to complete it."
+        isBookmarkSidebarOpen={isBookmarkSidebarOpen}
+        onToggleBookmarkSidebar={() => setIsBookmarkSidebarOpen((value) => !value)}
       />
     )
   }
@@ -930,6 +1155,8 @@ function App() {
       serviceData={serviceData}
       weatherState={weatherState}
       onRefresh={() => setRefreshKey((value) => value + 1)}
+      isBookmarkSidebarOpen={isBookmarkSidebarOpen}
+      onToggleBookmarkSidebar={() => setIsBookmarkSidebarOpen((value) => !value)}
     />
   )
 }
