@@ -119,6 +119,7 @@ export function BookmarkSidebar({ isOpen, onToggle }) {
                 ref={searchInputRef}
                 id="bookmark-search"
                 type="search"
+                autoComplete="off"
                 placeholder="Search bookmarks"
                 value={searchValue}
                 onChange={(event) => setSearchValue(event.target.value)}
