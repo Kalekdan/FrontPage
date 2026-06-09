@@ -149,9 +149,12 @@ export const dashboardConfig = {
     windspeedUnit: 'kmh',
   },
   markets: {
-    corsProxyUrl: 'https://api.allorigins.win/raw?url=',
-    range: '1mo',
-    interval: '1d',
+    corsProxyUrl: '',
+    twelvedata: {
+      apiKey: 'demo',
+      interval: '1day',
+      outputsize: 45,
+    },
     instruments: [
       {
         id: 'vusa',
@@ -171,6 +174,12 @@ export const dashboardConfig = {
         name: 'Apple',
         type: 'Stock',
       },
+      {
+        id: 'tsla',
+        symbol: 'TSLA',
+        name: 'Tesla',
+        type: 'Stock',
+      }
     ],
   },
 }

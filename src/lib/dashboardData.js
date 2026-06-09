@@ -423,15 +423,7 @@ export function useServiceStatus(refreshKey) {
   return serviceState
 }
 
-function buildMarketRequest(instrument) {
-  const { range = '1mo', interval = '1d' } = dashboardConfig.markets ?? {}
-  const params = new URLSearchParams({
-    range,
-    interval,
-    includePrePost: 'false',
-    events: 'div,splits',
-  })
-  const directUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(instrument.symbol)}?${params.toString()}`
+function buildProxyUrl(directUrl) {
   const proxyUrl = dashboardConfig.markets?.corsProxyUrl ?? dashboardConfig.markets?.proxyUrl ?? ''
 
   if (!proxyUrl) {
@@ -445,25 +437,46 @@ function buildMarketRequest(instrument) {
   return `${proxyUrl}${encodeURIComponent(directUrl)}`
 }
 
-function normalizeMarketSeries(instrument, payload) {
-  const result = payload?.chart?.result?.[0]
-  const quote = result?.indicators?.quote?.[0]
-  const timestamps = result?.timestamp ?? []
-  const closes = quote?.close ?? []
-  const points = timestamps
-    .map((timestamp, index) => {
-      const price = closes[index]
+function buildTwelveDataMarketRequest(instrument) {
+  const twelvedata = dashboardConfig.markets?.twelvedata ?? {}
+  const params = new URLSearchParams({
+    symbol: instrument.symbol,
+    interval: twelvedata.interval ?? '1day',
+    outputsize: String(twelvedata.outputsize ?? 45),
+    apikey: twelvedata.apiKey ?? 'demo',
+  })
 
-      if (typeof price !== 'number' || Number.isNaN(price)) {
+  const directUrl = `https://api.twelvedata.com/time_series?${params.toString()}`
+  return buildProxyUrl(directUrl)
+}
+
+function buildMarketRequest(instrument) {
+  return buildTwelveDataMarketRequest(instrument)
+}
+
+function normalizeTwelveDataMarketSeries(instrument, payload) {
+  if (payload?.status === 'error') {
+    throw new Error(payload?.message || `No chart data returned for ${instrument.symbol}.`)
+  }
+
+  const values = Array.isArray(payload?.values) ? payload.values : []
+  const points = values
+    .map((point) => {
+      const dateValue = point?.datetime
+      const priceValue = Number(point?.close)
+      const timestamp = dateValue ? new Date(dateValue).getTime() : Number.NaN
+
+      if (!Number.isFinite(timestamp) || Number.isNaN(priceValue)) {
         return null
       }
 
       return {
-        time: timestamp * 1000,
-        value: price,
+        time: timestamp,
+        value: priceValue,
       }
     })
     .filter(Boolean)
+    .reverse()
 
   if (!points.length) {
     throw new Error(`No chart data returned for ${instrument.symbol}.`)
@@ -473,8 +486,6 @@ function normalizeMarketSeries(instrument, payload) {
   const latestPoint = points[points.length - 1]
   const delta = latestPoint.value - firstValue
   const deltaPercent = firstValue ? (delta / firstValue) * 100 : 0
-  const currency = result?.meta?.currency || ''
-  const exchangeName = result?.meta?.exchangeName || ''
 
   return {
     status: 'ready',
@@ -482,10 +493,14 @@ function normalizeMarketSeries(instrument, payload) {
     latestValue: latestPoint.value,
     delta,
     deltaPercent,
-    currency,
-    exchangeName,
-    previousClose: result?.meta?.previousClose ?? null,
+    currency: payload?.meta?.currency || '',
+    exchangeName: payload?.meta?.exchange || '',
+    previousClose: points.length > 1 ? points[points.length - 2].value : null,
   }
+}
+
+function normalizeMarketSeries(instrument, payload) {
+  return normalizeTwelveDataMarketSeries(instrument, payload)
 }
 
 export function useMarketData(refreshKey) {
@@ -515,11 +530,6 @@ export function useMarketData(refreshKey) {
 
             if (!response.ok) {
               throw new Error(`Market request failed with HTTP ${response.status}.`)
-            }
-
-            const error = payload?.chart?.error?.description
-            if (error) {
-              throw new Error(error)
             }
 
             return [instrument.id, normalizeMarketSeries(instrument, payload)]
