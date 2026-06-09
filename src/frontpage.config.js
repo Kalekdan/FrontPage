@@ -148,4 +148,29 @@ export const dashboardConfig = {
     temperatureUnit: 'celsius',
     windspeedUnit: 'kmh',
   },
+  markets: {
+    corsProxyUrl: 'https://api.allorigins.win/raw?url=',
+    range: '1mo',
+    interval: '1d',
+    instruments: [
+      {
+        id: 'vusa',
+        symbol: 'VUSA.L',
+        name: 'Vanguard S&P 500 UCITS ETF',
+        type: 'ETF',
+      },
+      {
+        id: 'vwrl',
+        symbol: 'VWRL.L',
+        name: 'Vanguard FTSE All-World UCITS ETF',
+        type: 'ETF',
+      },
+      {
+        id: 'aapl',
+        symbol: 'AAPL',
+        name: 'Apple',
+        type: 'Stock',
+      },
+    ],
+  },
 }

@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import './App.css'
 import { dashboardConfig } from './frontpage.config.js'
-import { useFeedData, useHashRoute, useServiceStatus, useWeather } from './lib/dashboardData.js'
+import { useFeedData, useHashRoute, useMarketData, useServiceStatus, useWeather } from './lib/dashboardData.js'
 import { FeedDetailPage } from './pages/FeedDetailPage.jsx'
 import { HomePage } from './pages/HomePage.jsx'
+import { InsightsPage } from './pages/InsightsPage.jsx'
 import { NetworkPage } from './pages/NetworkPage.jsx'
 import { SectionPage } from './pages/SectionPage.jsx'
 
@@ -51,6 +52,7 @@ function App() {
   }
   const route = useHashRoute()
   const feedData = useFeedData(refreshKey)
+  const marketData = useMarketData(refreshKey)
   const serviceData = useServiceStatus(serviceRefreshKey)
   const weatherState = useWeather(refreshKey)
   const activeFeed = dashboardConfig.rss.feeds.find((feed) => feed.id === route.feedId)
@@ -68,10 +70,11 @@ function App() {
 
   if (route.page === 'insights') {
     return (
-      <SectionPage
-        routePage="insights"
-        title="Insights"
-        description="Explore signal trends, feed summaries, and intelligence snapshots."
+      <InsightsPage
+        feedData={feedData}
+        marketData={marketData}
+        summaryText={intelligenceSummary}
+        summaryGeneratedAt={intelligenceSummaryGeneratedAt}
         onRefresh={() => setRefreshKey((value) => value + 1)}
         isBookmarkSidebarOpen={isBookmarkSidebarOpen}
         onToggleBookmarkSidebar={() => setIsBookmarkSidebarOpen((value) => !value)}

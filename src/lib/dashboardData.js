@@ -423,6 +423,134 @@ export function useServiceStatus(refreshKey) {
   return serviceState
 }
 
+function buildMarketRequest(instrument) {
+  const { range = '1mo', interval = '1d' } = dashboardConfig.markets ?? {}
+  const params = new URLSearchParams({
+    range,
+    interval,
+    includePrePost: 'false',
+    events: 'div,splits',
+  })
+  const directUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(instrument.symbol)}?${params.toString()}`
+  const proxyUrl = dashboardConfig.markets?.corsProxyUrl ?? dashboardConfig.markets?.proxyUrl ?? ''
+
+  if (!proxyUrl) {
+    return directUrl
+  }
+
+  if (proxyUrl.includes('{url}')) {
+    return proxyUrl.replace('{url}', encodeURIComponent(directUrl))
+  }
+
+  return `${proxyUrl}${encodeURIComponent(directUrl)}`
+}
+
+function normalizeMarketSeries(instrument, payload) {
+  const result = payload?.chart?.result?.[0]
+  const quote = result?.indicators?.quote?.[0]
+  const timestamps = result?.timestamp ?? []
+  const closes = quote?.close ?? []
+  const points = timestamps
+    .map((timestamp, index) => {
+      const price = closes[index]
+
+      if (typeof price !== 'number' || Number.isNaN(price)) {
+        return null
+      }
+
+      return {
+        time: timestamp * 1000,
+        value: price,
+      }
+    })
+    .filter(Boolean)
+
+  if (!points.length) {
+    throw new Error(`No chart data returned for ${instrument.symbol}.`)
+  }
+
+  const firstValue = points[0].value
+  const latestPoint = points[points.length - 1]
+  const delta = latestPoint.value - firstValue
+  const deltaPercent = firstValue ? (delta / firstValue) * 100 : 0
+  const currency = result?.meta?.currency || ''
+  const exchangeName = result?.meta?.exchangeName || ''
+
+  return {
+    status: 'ready',
+    points,
+    latestValue: latestPoint.value,
+    delta,
+    deltaPercent,
+    currency,
+    exchangeName,
+    previousClose: result?.meta?.previousClose ?? null,
+  }
+}
+
+export function useMarketData(refreshKey) {
+  const [marketState, setMarketState] = useState(() =>
+    Object.fromEntries(
+      (dashboardConfig.markets?.instruments ?? []).map((instrument) => [
+        instrument.id,
+        { status: 'loading', points: [] },
+      ]),
+    ),
+  )
+
+  useEffect(() => {
+    let cancelled = false
+    const instruments = dashboardConfig.markets?.instruments ?? []
+
+    if (!instruments.length) {
+      return undefined
+    }
+
+    async function loadMarketData() {
+      const results = await Promise.all(
+        instruments.map(async (instrument) => {
+          try {
+            const response = await fetch(buildMarketRequest(instrument), { cache: 'no-store' })
+            const payload = await response.json()
+
+            if (!response.ok) {
+              throw new Error(`Market request failed with HTTP ${response.status}.`)
+            }
+
+            const error = payload?.chart?.error?.description
+            if (error) {
+              throw new Error(error)
+            }
+
+            return [instrument.id, normalizeMarketSeries(instrument, payload)]
+          } catch (error) {
+            return [
+              instrument.id,
+              {
+                status: 'error',
+                points: [],
+                error: error.message,
+              },
+            ]
+          }
+        }),
+      )
+
+      if (!cancelled) {
+        setMarketState(Object.fromEntries(results))
+      }
+    }
+
+    loadMarketData()
+
+    return () => {
+      cancelled = true
+    }
+  }, [refreshKey])
+
+  return marketState
+}
+
 export function useWeather(refreshKey) {
   const [weatherState, setWeatherState] = useState({ status: 'loading' })
 
@@ -584,6 +712,36 @@ function getSummaryFromApiResponse(payload) {
   return ''
 }
 
+export function formatMarketPrice(value, currency = '') {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
+    return 'Unavailable'
+  }
+
+  return new Intl.NumberFormat(undefined, {
+    style: currency ? 'currency' : 'decimal',
+    currency: currency || undefined,
+    maximumFractionDigits: 2,
+  }).format(value)
+}
+
+export function formatMarketDelta(value, currency = '') {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
+    return 'Unavailable'
+  }
+
+  const sign = value > 0 ? '+' : ''
+  return `${sign}${formatMarketPrice(value, currency)}`
+}
+
+export function formatPercentDelta(value) {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
+    return 'Unavailable'
+  }
+
+  const sign = value > 0 ? '+' : ''
+  return `${sign}${value.toFixed(2)}%`
+}
+
 export async function requestIntelligenceSummary(feedData, userApiKey = '') {
   const llmConfig = dashboardConfig.llm ?? {}
   const apiUrl = llmConfig.summaryApiUrl
@@ -645,9 +803,9 @@ export async function requestIntelligenceSummary(feedData, userApiKey = '') {
     return summaryText
   } catch (error) {
     if (error.name === 'AbortError') {
-      throw new Error('Summary request timed out.')
+      throw new Error('Summary request timed out.', { cause: error })
     }
-    throw error
+    throw new Error(error.message || 'Summary request failed.', { cause: error })
   } finally {
     window.clearTimeout(timeoutId)
   }

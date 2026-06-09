@@ -894,6 +894,167 @@ button {
   color: #cdd8ef;
 }
 
+.insight-summary-panel h2,
+.insight-feed-card h2,
+.market-card h2 {
+  font-size: 1.05rem;
+}
+
+.insight-section {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.insight-feed-grid {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.market-grid {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.insight-feed-card,
+.market-card {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.insight-summary-panel {
+  padding-block: 0.9rem;
+}
+
+.insight-feed-card .panel-heading,
+.insight-summary-panel .panel-heading {
+  align-items: center;
+}
+
+.insight-feed-card .panel-heading {
+  align-items: start;
+}
+
+.insight-feed-card .panel-heading > div {
+  min-width: 0;
+}
+
+.insight-feed-card .panel-heading h2 {
+  overflow-wrap: anywhere;
+}
+
+.insight-feed-meta {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.insight-story-link {
+  color: #e8f0ff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+.insight-story-link:hover {
+  color: #ffffff;
+}
+
+.insight-feed-meta a,
+.market-symbol {
+  color: #a8bee7;
+  font-size: 0.78rem;
+}
+
+.insight-feed-time {
+  color: #a8bee7;
+}
+
+.insight-feed-description {
+  color: var(--muted);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.market-card {
+  background:
+    radial-gradient(120% 120% at 100% 0%, rgba(93, 124, 255, 0.12), transparent 50%),
+    linear-gradient(160deg, rgba(14, 22, 38, 0.88), rgba(10, 16, 28, 0.8));
+}
+
+.market-card-header {
+  align-items: start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.market-card-grid {
+  align-items: end;
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: minmax(0, 0.8fr) minmax(180px, 1.2fr);
+}
+
+.market-price {
+  font-size: clamp(1.7rem, 3vw, 2.2rem);
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.market-change {
+  align-items: end;
+  display: grid;
+  gap: 0.12rem;
+  justify-items: end;
+}
+
+.market-change strong {
+  font-size: 1rem;
+}
+
+.market-change span {
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.market-change.positive {
+  color: #83f2c3;
+}
+
+.market-change.negative {
+  color: #ff8c9d;
+}
+
+.market-sparkline {
+  color: #83f2c3;
+  height: 5.25rem;
+  width: 100%;
+}
+
+.market-sparkline.negative {
+  color: #ff8c9d;
+}
+
+.market-sparkline-line {
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.25;
+}
+
+.market-sparkline-fill {
+  opacity: 0.9;
+}
+
+.market-sparkline.empty {
+  background: rgba(138, 176, 255, 0.04);
+  border: 1px dashed rgba(138, 176, 255, 0.14);
+  border-radius: 0.9rem;
+}
+
 .headlines-block {
   display: grid;
   gap: 0.7rem;
