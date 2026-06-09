@@ -137,7 +137,7 @@ export const dashboardConfig = {
     summaryApiUrl: 'https://api.openai.com/v1/chat/completions',
     model: 'gpt-4.1-mini',
     timeoutMs: 200000,
-    systemPrompt: 'You summarize RSS feed intelligence for a dashboard. Be factual, concise, and avoid speculation. Keep your summary to 3 or 4 sentences max.',
+    systemPrompt: 'You summarize RSS feed intelligence for a dashboard. Be factual, concise, and avoid speculation. Keep your summary to a couple of sentences max. Use line spacing to break up different points. Do not use bullet points or lists.',
     headers: {},
   },
   services: [

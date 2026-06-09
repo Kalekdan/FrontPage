@@ -2,11 +2,16 @@
 
 A lightweight JSX dashboard that can be configured from code.
 
+I built this to be my homepage and a one stop shop for me to see everything I need when I launch my browser. The live version [here](https://jr-front-page.netlify.app/#/) is therefore configured for me.
+
+If you want your own version, then fork this and edit the frontpage.config.js
+
+All tokens/keys etc are stored in the browser cache by setting them in the app itself. (I know this isn't ideal, but I didn't want to bog it down with login details when I'm basically always going to be using this on the same few devices anyway)
+
 ## Features
-- RSS feed cards configured in `src/frontpage.config.js`
+- RSS feed cards
 - Bookmark sidebar with grouped sections, search, and quick open
 - On-demand intelligence summary generation from loaded RSS feed data
-- Separate detail page for each feed at `#/feeds/<feed-id>`
 - Service status checks with response-time pings
 - Current weather panel powered by Open-Meteo
 
