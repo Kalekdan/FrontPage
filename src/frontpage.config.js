@@ -89,6 +89,22 @@ export const dashboardConfig = {
       description: 'League of Legends stats and rankings.',
       tags: ['Gaming'],
       starred: false,
+    },
+    {
+      id: 'gemini',
+      title: 'Gemini',
+      url: 'https://gemini.google.com',
+      description: 'Google\'s Gemini AI platform for testing and exploration.',
+      tags: ['AI', 'Development'],
+      starred: false,
+    },
+    {
+      id: 'chatgpt',
+      title: 'ChatGPT',
+      url: 'https://chat.openai.com/',
+      description: 'OpenAI\'s ChatGPT for AI conversations and assistance.',
+      tags: ['AI', 'Development'],
+      starred: false,
     }
   ],
   rss: {
