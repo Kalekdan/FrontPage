@@ -5,14 +5,11 @@ export function DashboardChrome({ children, routePage, onRefresh, onNewWidget, i
   const menuItems = [
     { label: 'Home', page: 'home', href: '#/' },
     { label: 'Insights', page: 'insights', href: '#/insights' },
-    { label: 'Automation', page: 'automation', href: '#/automation' },
     { label: 'Network', page: 'network', href: '#/network' },
-    { label: 'Security', page: 'security', href: '#/security' },
   ]
   const topTabs = [
     { label: 'Home', page: 'home', href: '#/' },
     { label: 'Insights', page: 'insights', href: '#/insights' },
-    { label: 'Automation', page: 'automation', href: '#/automation' },
   ]
 
   return (

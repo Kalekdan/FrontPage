@@ -105,6 +105,14 @@ export const dashboardConfig = {
       description: 'OpenAI\'s ChatGPT for AI conversations and assistance.',
       tags: ['AI', 'Development'],
       starred: false,
+    },
+    {
+      id: 'joerickard',
+      title: 'Joe Rickard\'s Website',
+      url: 'https://www.joerickard.co.uk/',
+      description: 'Personal website of Joe Rickard.',
+      tags: ['Personal'],
+      starred: false,
     }
   ],
   rss: {

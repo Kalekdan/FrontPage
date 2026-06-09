@@ -105,37 +105,11 @@ function App() {
     )
   }
 
-  if (route.page === 'automation') {
-    return (
-      <SectionPage
-        routePage="automation"
-        title="Automation"
-        description="Create and manage automation routines for recurring operations."
-        onRefresh={() => setRefreshKey((value) => value + 1)}
-        isBookmarkSidebarOpen={isBookmarkSidebarOpen}
-        onToggleBookmarkSidebar={() => setIsBookmarkSidebarOpen((value) => !value)}
-      />
-    )
-  }
-
   if (route.page === 'network') {
     return (
       <NetworkPage
         serviceData={serviceData}
         onRefreshServices={() => setServiceRefreshKey((value) => value + 1)}
-        isBookmarkSidebarOpen={isBookmarkSidebarOpen}
-        onToggleBookmarkSidebar={() => setIsBookmarkSidebarOpen((value) => !value)}
-      />
-    )
-  }
-
-  if (route.page === 'security') {
-    return (
-      <SectionPage
-        routePage="security"
-        title="Security"
-        description="Review alerts, patch posture, and risk indicators across systems."
-        onRefresh={() => setRefreshKey((value) => value + 1)}
         isBookmarkSidebarOpen={isBookmarkSidebarOpen}
         onToggleBookmarkSidebar={() => setIsBookmarkSidebarOpen((value) => !value)}
       />
@@ -169,7 +143,7 @@ function App() {
   if (route.page === 'widget-new') {
     return (
       <SectionPage
-        routePage="automation"
+        routePage="home"
         title="New Widget"
         description="Widget creation has been stubbed. Add a form and persistence workflow to complete it."
         isBookmarkSidebarOpen={isBookmarkSidebarOpen}

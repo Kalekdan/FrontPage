@@ -63,7 +63,7 @@ export function getRouteFromHash() {
     return { page: 'widget-new' }
   }
 
-  if (['insights', 'automation', 'network', 'security', 'support', 'logout'].includes(parts[0])) {
+  if (['insights', 'network', 'support', 'logout'].includes(parts[0])) {
     return { page: parts[0] }
   }
 
