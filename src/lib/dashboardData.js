@@ -437,21 +437,22 @@ function buildProxyUrl(directUrl) {
   return `${proxyUrl}${encodeURIComponent(directUrl)}`
 }
 
-function buildTwelveDataMarketRequest(instrument) {
+function buildTwelveDataMarketRequest(instrument, userApiKey = '') {
   const twelvedata = dashboardConfig.markets?.twelvedata ?? {}
+  const apiKey = userApiKey.trim() || twelvedata.apiKey || 'demo'
   const params = new URLSearchParams({
     symbol: instrument.symbol,
     interval: twelvedata.interval ?? '1day',
     outputsize: String(twelvedata.outputsize ?? 45),
-    apikey: twelvedata.apiKey ?? 'demo',
+    apikey: apiKey,
   })
 
   const directUrl = `https://api.twelvedata.com/time_series?${params.toString()}`
   return buildProxyUrl(directUrl)
 }
 
-function buildMarketRequest(instrument) {
-  return buildTwelveDataMarketRequest(instrument)
+function buildMarketRequest(instrument, userApiKey = '') {
+  return buildTwelveDataMarketRequest(instrument, userApiKey)
 }
 
 function normalizeTwelveDataMarketSeries(instrument, payload) {
@@ -503,7 +504,7 @@ function normalizeMarketSeries(instrument, payload) {
   return normalizeTwelveDataMarketSeries(instrument, payload)
 }
 
-export function useMarketData(refreshKey) {
+export function useMarketData(refreshKey, userApiKey = '') {
   const [marketState, setMarketState] = useState(() =>
     Object.fromEntries(
       (dashboardConfig.markets?.instruments ?? []).map((instrument) => [
@@ -525,7 +526,7 @@ export function useMarketData(refreshKey) {
       const results = await Promise.all(
         instruments.map(async (instrument) => {
           try {
-            const response = await fetch(buildMarketRequest(instrument), { cache: 'no-store' })
+            const response = await fetch(buildMarketRequest(instrument, userApiKey), { cache: 'no-store' })
             const payload = await response.json()
 
             if (!response.ok) {
@@ -556,7 +557,7 @@ export function useMarketData(refreshKey) {
     return () => {
       cancelled = true
     }
-  }, [refreshKey])
+  }, [refreshKey, userApiKey])
 
   return marketState
 }

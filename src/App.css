@@ -949,6 +949,16 @@ button {
   gap: 0.2rem;
 }
 
+.insight-market-actions {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.insight-market-settings {
+  padding-block: 0.85rem;
+}
+
 .insight-story-link {
   color: #e8f0ff;
   font-size: 0.88rem;

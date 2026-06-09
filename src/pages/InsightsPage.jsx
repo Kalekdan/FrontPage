@@ -1,4 +1,6 @@
 import { dashboardConfig } from '../frontpage.config.js'
+import { useState } from 'react'
+import { FiSettings } from 'react-icons/fi'
 import {
   formatDate,
   formatMarketDelta,
@@ -115,10 +117,13 @@ export function InsightsPage({
   marketData,
   summaryText,
   summaryGeneratedAt,
+  marketApiKey,
+  onMarketApiKeyChange,
   onRefresh,
   isBookmarkSidebarOpen,
   onToggleBookmarkSidebar,
 }) {
+  const [showMarketSettings, setShowMarketSettings] = useState(false)
   const summaryGeneratedLabel = summaryGeneratedAt ? formatDate(summaryGeneratedAt) : ''
   const feeds = dashboardConfig.rss.feeds
   const markets = dashboardConfig.markets?.instruments ?? []
@@ -163,8 +168,48 @@ export function InsightsPage({
             <p className="eyebrow">Market charts</p>
             <h2>Markets</h2>
           </div>
-          <span className="muted">{markets.length} configured</span>
+          <div className="insight-market-actions">
+            <button
+              className="summary-settings-button"
+              type="button"
+              onClick={() => setShowMarketSettings((value) => !value)}
+              aria-label={showMarketSettings ? 'Hide Twelve Data key settings' : 'Show Twelve Data key settings'}
+              aria-expanded={showMarketSettings}
+              aria-controls="market-key-settings"
+            >
+              <FiSettings aria-hidden="true" />
+            </button>
+            <span className="muted">{markets.length} configured</span>
+          </div>
         </div>
+        {showMarketSettings ? (
+          <article className="panel insight-market-settings" id="market-key-settings">
+            <div className="summary-key-row">
+              <label className="summary-key-label" htmlFor="market-api-key">
+                Twelve Data API key
+              </label>
+              <input
+                className="summary-key-input"
+                id="market-api-key"
+                type="password"
+                value={marketApiKey}
+                onChange={(event) => onMarketApiKeyChange(event.target.value)}
+                placeholder="td_..."
+                autoComplete="off"
+                spellCheck={false}
+              />
+              <button
+                className="summary-key-clear"
+                type="button"
+                onClick={() => onMarketApiKeyChange('')}
+                disabled={!marketApiKey}
+              >
+                Clear
+              </button>
+            </div>
+            <p className="muted">Stored locally in this browser only.</p>
+          </article>
+        ) : null}
         <div className="market-grid">
           {markets.map((instrument) => {
             const state = marketData[instrument.id] ?? { status: 'loading', points: [] }

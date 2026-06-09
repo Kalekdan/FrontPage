@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import { dashboardConfig } from './frontpage.config.js'
 import { useFeedData, useHashRoute, useMarketData, useServiceStatus, useWeather } from './lib/dashboardData.js'
@@ -12,6 +12,13 @@ function App() {
   const [refreshKey, setRefreshKey] = useState(0)
   const [serviceRefreshKey, setServiceRefreshKey] = useState(0)
   const [isBookmarkSidebarOpen, setIsBookmarkSidebarOpen] = useState(true)
+  const [marketApiKey, setMarketApiKey] = useState(() => {
+    if (typeof window === 'undefined') {
+      return ''
+    }
+
+    return window.localStorage.getItem('frontpage.twelvedataApiKey') ?? ''
+  })
   const [intelligenceSummary, setIntelligenceSummary] = useState(() => {
     if (typeof window === 'undefined') {
       return ''
@@ -50,9 +57,23 @@ function App() {
     window.localStorage.removeItem('frontpage.intelligenceSummary')
     window.localStorage.removeItem('frontpage.intelligenceSummaryGeneratedAt')
   }
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    if (marketApiKey) {
+      window.localStorage.setItem('frontpage.twelvedataApiKey', marketApiKey)
+      return
+    }
+
+    window.localStorage.removeItem('frontpage.twelvedataApiKey')
+  }, [marketApiKey])
+
   const route = useHashRoute()
   const feedData = useFeedData(refreshKey)
-  const marketData = useMarketData(refreshKey)
+  const marketData = useMarketData(refreshKey, marketApiKey)
   const serviceData = useServiceStatus(serviceRefreshKey)
   const weatherState = useWeather(refreshKey)
   const activeFeed = dashboardConfig.rss.feeds.find((feed) => feed.id === route.feedId)
@@ -75,6 +96,8 @@ function App() {
         marketData={marketData}
         summaryText={intelligenceSummary}
         summaryGeneratedAt={intelligenceSummaryGeneratedAt}
+        marketApiKey={marketApiKey}
+        onMarketApiKeyChange={setMarketApiKey}
         onRefresh={() => setRefreshKey((value) => value + 1)}
         isBookmarkSidebarOpen={isBookmarkSidebarOpen}
         onToggleBookmarkSidebar={() => setIsBookmarkSidebarOpen((value) => !value)}

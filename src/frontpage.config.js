@@ -173,16 +173,16 @@ export const dashboardConfig = {
     },
     instruments: [
       {
-        id: 'vusa',
-        symbol: 'VUSA.L',
-        name: 'Vanguard S&P 500 UCITS ETF',
-        type: 'ETF',
+        id: 'btc-usd',
+        symbol: 'BTC/USD',
+        name: 'Bitcoin',
+        type: 'Crypto',
       },
       {
-        id: 'vwrl',
-        symbol: 'VWRL.L',
-        name: 'Vanguard FTSE All-World UCITS ETF',
-        type: 'ETF',
+        id: 'eth-usd',
+        symbol: 'ETH/USD',
+        name: 'Ethereum',
+        type: 'Crypto',
       },
       {
         id: 'aapl',
