@@ -151,7 +151,7 @@ export const dashboardConfig = {
   services: [
     {
       name: 'Home Server',
-      url: 'http://192.167.0.2:8006',
+      url: 'http://192.168.0.2:8006',
       method: 'GET',
       timeoutMs: 4000,
       description: 'Proxmox Home Server.',
