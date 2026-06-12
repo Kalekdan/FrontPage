@@ -150,11 +150,11 @@ export const dashboardConfig = {
   },
   services: [
     {
-      name: 'GitHub API',
-      url: 'https://api.github.com',
+      name: 'Home Server',
+      url: 'http://192.167.0.2:8006',
       method: 'GET',
       timeoutMs: 4000,
-      description: 'General GitHub API availability.',
+      description: 'Proxmox Home Server.',
     },
     {
       name: 'Cloudflare Status API',
